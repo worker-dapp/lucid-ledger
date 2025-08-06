@@ -1,0 +1,39 @@
+services:
+  backend:
+    build: ./server
+    container_name: server
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./server/.env
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./client
+    container_name: client
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./client/.env
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    env_file:
+      - ./server/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lucid_user -d lucid_ledger_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
