@@ -1,11 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import EmployeeRegister from "./pages/EmployeeRegister";
+import EmployeeRegister from "./EmployeePages/EmployeeRegister";
 import EmployerRegister from "./pages/EmployerRegister";
-import EmployeeLogIn from "./pages/EmployeeLogIn";
+import EmployeeLogIn from "./EmployeePages/EmployeeLogIn";
 import EmployerLogIn from "./pages/EmployerLogIn";
 import AboutPage from "./pages/NewAbout";
-import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployeeDashboard from "./EmployeePages/EmployeeDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import Dispute from "./pages/Dispute";
 import Payments from "./pages/Payments";
@@ -13,13 +13,14 @@ import JobDetails from "./pages/JobDetails";
 import MyJobs from "./pages/MyJobs";
 import MyJobDetails from "./pages/MyJobDetails";
 import EmployerProfile from "./pages/EmployerProfile";
-import EmployeeProfile from "./pages/EmployeeProfile";
+import EmployeeProfile from "./EmployeePages/EmployeeProfile";
 import EmployerJobPortal from "./pages/EmployerJobPortal";
 import ViewOpenContracts from "./pages/ViewOpenContracts";
 import DAODashboard from "./pages/DAODashboard";
 import ReviewCompletedContracts from "./pages/ReviewCompletedContracts";
 import ReviewApplications from "./pages/ReviewApplications";
 import Job from "./pages/Job";
+import EmployeeJobsPage from "./EmployeePages/EmployeeJobsPage";
 import { AuthProvider } from "./api/AuthContext";
 // import ReviewCompletedContracts from "./pages/ReviewCompletedContracts";
 
@@ -51,6 +52,7 @@ const App = () => {
         <Route path="/dao" element={<DAODashboard />} />
         <Route path="/job" element={<Job />} />
         <Route path="/new-job" element={<Job />} />
+        <Route path="/employee-jobs" element={<EmployeeJobsPage />} />
         {/* <Route path="/review-completed-contracts" element={ReviewCompletedContracts />} /> */}
         <Route path="/review-completed-contracts" element={<ReviewCompletedContracts />} />
         <Route path="/review-applications" element={<ReviewApplications />} />

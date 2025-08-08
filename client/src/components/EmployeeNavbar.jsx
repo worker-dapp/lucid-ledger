@@ -69,7 +69,7 @@ const EmployeeNavbar = () => {
           </button>
           
           <NavLink
-            to="/my-jobs"
+            to="/employee-jobs"
             className={({ isActive }) =>
               `transition-all font-medium flex items-center gap-2 px-3 py-2 rounded ${
                 isActive ? "text-[#EE964B] font-semibold bg-[#1a4a7a]" : "text-white hover:text-[#F4D35E] hover:bg-[#1a4a7a]"
@@ -100,44 +100,6 @@ const EmployeeNavbar = () => {
             <span>🆘</span>
             Support Center
           </NavLink>
-
-          {user ? (
-            <div className='flex items-center gap-6'>
-              <span className="text-white text-sm">
-                Welcome, {user.first_name || user.email}
-              </span>
-              <button 
-                onClick={handleLogout} 
-                className='bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all shadow-md text-sm'>
-                  Log Out
-              </button>
-            </div>
-          ) : (
-            <div className='relative' ref={dropdownRef}>
-              <button 
-                onClick={() => setDropdownOpen(!isDropdownOpen)} 
-                className='bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 hover:shadow-lg transition-all shadow-md text-sm flex items-center gap-2'
-                >
-                <span>🔐</span>
-                Sign In
-              </button>
-
-              {isDropdownOpen && (
-                <div className='absolute right-0 mt-2 w-40 bg-white border border-gray-200 shadow-lg rounded-lg'>
-                  <Link 
-                    to='/employeeLogin' 
-                    className='block px-4 py-2 text-gray-900 hover:bg-orange-100 transition-all rounded-t-lg'>
-                    Employee
-                  </Link>
-                  <Link 
-                    to='/employerLogin' 
-                    className='block px-4 py-2 text-gray-900 hover:bg-orange-100 transition-all rounded-b-lg'>
-                    Employer
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}        
         </div>
 
         {/* Mobile Menu Button */}

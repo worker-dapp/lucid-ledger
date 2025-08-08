@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import authRoutes from './routes/auth.js';
-import contractRoutes from './routes/contracts.js';
 import jobRoutes from './routes/jobs.js';
 
 // Load environment variables
@@ -41,15 +40,14 @@ app.get('/api', (req, res) => {
       'auth/signup': 'POST /api/auth/signup',
       'auth/login': 'POST /api/auth/login',
       'auth/me': 'GET /api/auth/me',
-      jobs: 'POST /api/jobs',
-      'jobs/:id': 'DELETE /api/jobs/:id'
+      jobs: 'GET/POST /api/jobs',
+      'jobs/:id': 'GET/PUT/DELETE /api/jobs/:id'
     }
   });
 });
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/contracts', contractRoutes);
 app.use('/api/jobs', jobRoutes);
 
 // Error handling middleware
