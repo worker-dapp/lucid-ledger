@@ -50,6 +50,7 @@ const App = () => {
         <Route path="/view-open-contracts" element={<ViewOpenContracts />} />
         <Route path="/dao" element={<DAODashboard />} />
         <Route path="/job" element={<Job />} />
+        <Route path="/new-job" element={<Job />} />
         {/* <Route path="/review-completed-contracts" element={ReviewCompletedContracts />} /> */}
         <Route path="/review-completed-contracts" element={<ReviewCompletedContracts />} />
         <Route path="/review-applications" element={<ReviewApplications />} />

@@ -20,23 +20,20 @@ const EmployerJobPortal = () => {
   const [selectedContract, setSelectedContract] = useState(null);
 
   // --------------------------------------------------------------------------
-  // FETCH CONTRACTS
+  // FETCH JOBS
   // --------------------------------------------------------------------------
   useEffect(() => {
-    const fetchContracts = async () => {
-      const { data, error } = await supabase
-        .from("contracts")
-        .select("*")
-        .neq("status", "open");
+    const fetchJobs = async () => {
+      const { data, error } = await apiService.getJobs();
 
       if (error) {
-        console.error("Error fetching contracts:", error);
+        console.error("Error fetching jobs:", error);
       } else {
         setContracts(data || []);
         setFilteredContracts(data || []);
       }
     };
-    fetchContracts();
+    fetchJobs();
   }, []);
 
   // --------------------------------------------------------------------------
@@ -50,10 +47,10 @@ const EmployerJobPortal = () => {
   const filterContracts = () => {
     let updated = [...contracts];
 
-    // 1. Filter by contracttitle
+    // 1. Filter by job title
     if (searchTitle.trim() !== "") {
-      updated = updated.filter((contract) =>
-        contract.contracttitle
+      updated = updated.filter((job) =>
+        job.title
           ?.toLowerCase()
           .includes(searchTitle.toLowerCase())
       );
@@ -62,8 +59,8 @@ const EmployerJobPortal = () => {
     // 2. Filter by status
     if (statusFilter.trim() !== "") {
       updated = updated.filter(
-        (contract) =>
-          contract.status?.toLowerCase() === statusFilter.toLowerCase()
+        (job) =>
+          job.status?.toLowerCase() === statusFilter.toLowerCase()
       );
     }
 
@@ -71,76 +68,49 @@ const EmployerJobPortal = () => {
   };
 
   // --------------------------------------------------------------------------
-  // VIEW SIGNERS (Open Modal)
+  // VIEW JOB DETAILS (Open Modal)
   // --------------------------------------------------------------------------
-  const handleViewSigners = (contract) => {
-    // Set the entire contract in state so we know which one we're working with
-    setSelectedContract(contract);
+  const handleViewJobDetails = (job) => {
+    // Set the entire job in state so we know which one we're working with
+    setSelectedContract(job);
     setOpenSignersModal(true);
   };
 
   // --------------------------------------------------------------------------
-  // HANDLE CHECKBOX CHANGE FOR SIGNERS
+  // HANDLE JOB STATUS UPDATE
   // --------------------------------------------------------------------------
-  const handleSignerCheck = (index, isChecked) => {
-    if (!selectedContract) return;
-
-    // Copy the signers array, update the "isChecked" property
-    const updatedSigners = [...(selectedContract.signers || [])];
-    updatedSigners[index] = {
-      ...updatedSigners[index],
-      isChecked: isChecked,
-    };
-
-    // Update the contract in state with the new signers array
-    setSelectedContract({
-      ...selectedContract,
-      signers: updatedSigners,
-    });
+  const handleJobStatusUpdate = async (jobId, newStatus) => {
+    try {
+      const { data, error } = await apiService.updateJob(jobId, { status: newStatus });
+      
+      if (error) {
+        console.error("Error updating job:", error);
+        alert("Could not update job status!");
+      } else {
+        // Update local state
+        setContracts((prev) =>
+          prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j))
+        );
+        setFilteredContracts((prev) =>
+          prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j))
+        );
+        setOpenSignersModal(false);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Something went wrong!");
+    }
   };
 
   // --------------------------------------------------------------------------
-  // SAVE CONTRACT STATUS (set "pending") + Updated Signers
+  // SAVE JOB STATUS
   // --------------------------------------------------------------------------
   const handleSave = async () => {
     if (!selectedContract) return;
 
-    // Optional check: only set status to 'pending' if at least one signer is checked
-    const anyChecked = (selectedContract.signers || []).some(
-      (s) => s.isChecked
-    );
-
-    if (!anyChecked) {
-      alert("No signers were selected. Please check at least one signer.");
-      return;
-    }
-
     try {
-      // Update the contract in supabase => from "Contract Created" to "pending"
-      const { data, error } = await supabase
-        .from("contracts")
-        .update({
-          status: "pending",
-          signers: selectedContract.signers, // if you want to persist the updated signers
-        })
-        .eq("id", selectedContract.id)
-        .select();
-
-      if (error) {
-        console.error("Error updating contract:", error);
-        alert("Could not update contract status!");
-      } else if (data && data.length > 0) {
-        // Update local state
-        const updated = data[0]; // the updated contract from Supabase
-        setContracts((prev) =>
-          prev.map((c) => (c.id === updated.id ? updated : c))
-        );
-        setFilteredContracts((prev) =>
-          prev.map((c) => (c.id === updated.id ? updated : c))
-        );
-        // alert("Contract status updated to 'pending'!");
-        setOpenSignersModal(false);
-      }
+      // Update the job status to 'active'
+      await handleJobStatusUpdate(selectedContract.id, 'active');
     } catch (err) {
       console.error("Unexpected error:", err);
       alert("Something went wrong!");
@@ -154,47 +124,46 @@ const EmployerJobPortal = () => {
     <div className="relative min-h-screen p-6 bg-[#FFFFFF]">
       {/* TOP BAR */}
       <div className="max-w-5xl mx-auto flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#0D3B66]">View Contracts</h1>
+        <h1 className="text-3xl font-bold text-[#0D3B66]">View Jobs</h1>
 
-        {/* Button or Link to create new contract */}
+        {/* Button or Link to create new job */}
         <Link
           to="/new-job"
           className="bg-[#EE964B] text-white px-6 py-2 rounded-full shadow-md hover:bg-[#d97b33] transition">
-          Create a new Contract
+          Create a new Job
         </Link>
       </div>
 
-      {/* CONTRACT LISTINGS (FILTERED) */}
+      {/* JOB LISTINGS (FILTERED) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
-        {filteredContracts.map((contract) => (
+        {filteredContracts.map((job) => (
           <div
-            key={contract.id}
+            key={job.id}
             className="bg-white p-4 rounded-lg shadow-md border-l-4 border-[#F4D35E]">
             <h2 className="text-lg font-bold text-[#EE964B] mb-2">
-              {contract.contracttitle}
+              {job.title}
             </h2>
             <p className="text-sm text-[#0D3B66]">
-              <strong>Payment Rate:</strong> {contract.paymentrate}
+              <strong>Company:</strong> {job.company_name}
             </p>
             <p className="text-sm text-[#0D3B66]">
-              <strong>Payment Frequency:</strong> {contract.paymentfrequency}
+              <strong>Location:</strong> {job.location}
             </p>
             <p className="text-sm text-[#0D3B66]">
-              <strong>Location:</strong> {contract.location}
+              <strong>Salary:</strong> {job.salary} {job.currency}
             </p>
             <p className="text-sm text-[#0D3B66]">
-              <strong>Status:</strong> {contract.status}
+              <strong>Status:</strong> {job.status}
             </p>
             <p className="text-sm text-[#0D3B66]">
-              <strong>Applicants:</strong>{" "}
-              {Array.isArray(contract.signers) ? contract.signers.length : 0}
+              <strong>Job Type:</strong> {job.job_type}
             </p>
 
-            {/* Button to see signers */}
+            {/* Button to see job details */}
             <button
               className="mt-4 w-full bg-[#EE964B] text-white px-4 py-2 rounded-full shadow-md cursor-pointer"
-              onClick={() => handleViewSigners(contract)}>
-              View Applicants
+              onClick={() => handleViewJobDetails(job)}>
+              View Details
             </button>
           </div>
         ))}
@@ -234,12 +203,12 @@ const EmployerJobPortal = () => {
             <label
               className="block text-sm font-medium mb-1"
               htmlFor="searchTitle">
-              Search Contract Title
+              Search Job Title
             </label>
             <input
               id="searchTitle"
               type="text"
-              placeholder="e.g. My Contract"
+              placeholder="e.g. Software Engineer"
               className="w-full p-2 border rounded"
               value={searchTitle}
               onChange={(e) => setSearchTitle(e.target.value)}
@@ -275,34 +244,21 @@ const EmployerJobPortal = () => {
         </div>
       )}
 
-      {/* VIEW SIGNERS MODAL */}
+      {/* VIEW JOB DETAILS MODAL */}
       {openSignersModal && selectedContract && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
-            <h2 className="text-xl font-bold text-orange-600 mb-4">Signers</h2>
+            <h2 className="text-xl font-bold text-orange-600 mb-4">Job Details</h2>
 
-            {Array.isArray(selectedContract.signers) &&
-            selectedContract.signers.length > 0 ? (
-              <ul className="list-none ml-1">
-                {selectedContract.signers.map((signer, index) => (
-                  <li key={index} className="mb-2 flex items-center">
-                    <input
-                      type="checkbox"
-                      className="mr-2"
-                      checked={signer.isChecked || false}
-                      onChange={(e) =>
-                        handleSignerCheck(index, e.target.checked)
-                      }
-                    />
-                    <span>
-                      {signer.name} - {signer.walletAddress}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No signers yet.</p>
-            )}
+            <div className="space-y-3">
+              <p><strong>Title:</strong> {selectedContract.title}</p>
+              <p><strong>Company:</strong> {selectedContract.company_name}</p>
+              <p><strong>Location:</strong> {selectedContract.location}</p>
+              <p><strong>Job Type:</strong> {selectedContract.job_type}</p>
+              <p><strong>Salary:</strong> {selectedContract.salary} {selectedContract.currency}</p>
+              <p><strong>Status:</strong> {selectedContract.status}</p>
+              <p><strong>Description:</strong> {selectedContract.description}</p>
+            </div>
 
             <div className="flex justify-end gap-4 mt-6">
               <button
@@ -310,11 +266,13 @@ const EmployerJobPortal = () => {
                 onClick={() => setOpenSignersModal(false)}>
                 Close
               </button>
-              <button
-                className="bg-orange-600 text-white px-4 py-2 rounded"
-                onClick={handleSave}>
-                Save
-              </button>
+              {selectedContract.status === 'draft' && (
+                <button
+                  className="bg-orange-600 text-white px-4 py-2 rounded"
+                  onClick={handleSave}>
+                  Activate Job
+                </button>
+              )}
             </div>
           </div>
         </div>
