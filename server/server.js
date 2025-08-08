@@ -41,8 +41,6 @@ app.get('/api', (req, res) => {
       'auth/signup': 'POST /api/auth/signup',
       'auth/login': 'POST /api/auth/login',
       'auth/me': 'GET /api/auth/me',
-      contracts: 'POST /api/contracts',
-      'contracts/:id': 'PUT /api/contracts/:id',
       jobs: 'POST /api/jobs',
       'jobs/:id': 'DELETE /api/jobs/:id'
     }
