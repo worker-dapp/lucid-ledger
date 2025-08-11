@@ -26,7 +26,7 @@ jobs:
           REMOTE_PORT: ${{ secrets.EC2_PORT }}
           SOURCE: .
           TARGET: ${{ secrets.EC2_PATH }}
-          ARGS: -avz --delete --exclude='.git/' --exclude='node_modules/' --exclude='.github/'
+          ARGS: -avz --delete --exclude='.git/' --exclude='node_modules/' --exclude='.github/' --exclude='client/.env' --exclude='server/.env'
 
       - name: Restart services with Docker Compose on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -35,13 +35,25 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
+          envs: CLIENT_ENV,SERVER_ENV
           script: |
             set -euo pipefail
             cd ${{ secrets.EC2_PATH }}
             if command -v docker-compose >/dev/null 2>&1; then DC="docker-compose"; else DC="docker compose"; fi
+            mkdir -p client server
+            # Ensure env files exist (empty if no secrets provided)
+            : > server/.env
+            : > client/.env
+            # Populate env files from GitHub Secrets if present
+            if [ -n "${SERVER_ENV:-}" ]; then printf '%s' "$SERVER_ENV" > server/.env; fi
+            if [ -n "${CLIENT_ENV:-}" ]; then printf '%s' "$CLIENT_ENV" > client/.env; fi
             $DC down
             $DC build --pull
             $DC up -d
             $DC ps
+
+        env:
+          CLIENT_ENV: ${{ secrets.CLIENT_ENV }}
+          SERVER_ENV: ${{ secrets.SERVER_ENV }}
 
 
