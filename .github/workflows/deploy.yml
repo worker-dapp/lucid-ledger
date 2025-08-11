@@ -24,11 +24,12 @@ jobs:
           REMOTE_PORT: ${{ secrets.EC2_PORT }}
           SOURCE: .
           TARGET: ${{ secrets.EC2_PATH }}
-          ARGS: -avz --delete \
-            --exclude='.git/' \
-            --exclude='node_modules/' \
-            --exclude='.github/' \
-            --exclude='client/.env' \
+          ARGS: >
+            -avz --delete
+            --exclude='.git/'
+            --exclude='node_modules/'
+            --exclude='.github/'
+            --exclude='client/.env'
             --exclude='server/.env'
 
       - name: Deploy with Docker Compose
