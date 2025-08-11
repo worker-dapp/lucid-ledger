@@ -11,34 +11,23 @@ concurrency:
 
 jobs:
   client:
-    name: Client - Lint and Build
+    name: Client - Lint & Build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: client
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: client/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
-
-      - name: Lint (non-blocking initially)
-        run: npm run lint
+      - run: npm ci --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
+      - run: npm run lint
         continue-on-error: true
-
-      - name: Build
-        run: npm run build
-
-      - name: Upload client build artifact
-        uses: actions/upload-artifact@v4
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
         with:
           name: client-dist
           path: client/dist
@@ -50,57 +39,30 @@ jobs:
       run:
         working-directory: server
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: server/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
-
-      - name: Print Node version
-        run: node -v
+      - run: npm ci --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
+      - run: node -v
 
   docker-build:
     name: Docker - Build Images
     runs-on: ubuntu-latest
     needs: [client, server]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build server image
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
         with:
           context: ./server
           push: false
           tags: local/lucid-ledger-server:ci
-
-      - name: Build client image
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: ./client
           push: false
           tags: local/lucid-ledger-client:ci
-
-# CD note: Add a deploy job here that depends on successful builds, e.g. to GHCR/Render/Fly/Heroku.
-# Example (pseudo):
-#  deploy:
-#    needs: [client, server]
-#    runs-on: ubuntu-latest
-#    steps: ... (login and push docker images, or upload to hosting)
-
-  
-
-

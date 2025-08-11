@@ -2,12 +2,14 @@ services:
   backend:
     build: ./server
     container_name: server
+    restart: unless-stopped
     ports:
       - "5001:5001"
     env_file:
       - ./server/.env
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   frontend:
     build: ./client
@@ -30,7 +32,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lucid_user -d lucid_ledger_db"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
