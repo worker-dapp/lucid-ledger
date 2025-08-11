@@ -13,18 +13,30 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create contracts table
-CREATE TABLE IF NOT EXISTS contracts (
+-- Create jobs table
+CREATE TABLE IF NOT EXISTS jobs (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
-  description TEXT,
-  employer_id INTEGER REFERENCES users(id),
-  employee_id INTEGER REFERENCES users(id),
-  status VARCHAR(50) DEFAULT 'open',
-  payment_rate DECIMAL(10,2),
-  payment_frequency VARCHAR(50),
+  location_type VARCHAR(50),
   location VARCHAR(255),
-  reviewed BOOLEAN DEFAULT FALSE,
+  company_name VARCHAR(255),
+  notification_email VARCHAR(255),
+  reference_code VARCHAR(100),
+  job_type VARCHAR(100),
+  salary NUMERIC(12,2),
+  currency VARCHAR(10),
+  pay_frequency VARCHAR(50),
+  additional_compensation TEXT,
+  employee_benefits TEXT,
+  description TEXT,
+  selected_oracles TEXT,
+  verification_notes TEXT,
+  responsibilities TEXT,
+  skills TEXT,
+  associated_skills TEXT,
+  company_description TEXT,
+  employer_id INTEGER REFERENCES users(id),
+  status VARCHAR(20) DEFAULT 'draft',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -44,8 +56,8 @@ CREATE TRIGGER update_users_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Create trigger for contracts updated_at
-CREATE TRIGGER update_contracts_updated_at
-  BEFORE UPDATE ON contracts
+-- Create trigger for jobs updated_at
+CREATE TRIGGER update_jobs_updated_at
+  BEFORE UPDATE ON jobs
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();

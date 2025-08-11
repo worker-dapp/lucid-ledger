@@ -6,16 +6,15 @@ const JobLandingHero = () => {
   const navigate = useNavigate();
 
   const popularSearches = [
-    "Software Engineer",
-    "Data Analyst", 
-    "Project Manager",
-    "UX Designer",
-    "DevOps Engineer",
-    "Product Manager",
-    "Frontend Developer",
-    "Backend Developer",
-    "Full Stack Developer",
-    "Mobile Developer"
+    "Deckhand",
+    "Fish Cutter",
+    "Seafood Processor",
+    "Assembly Technician",
+    "Tea Harvester",
+    "Rubber Tapper",
+    "Palm Oil Harvester",
+    "Construction Laborer",
+    "Seasonal Farmworker"
   ];
 
   const handleSearch = (e) => {

@@ -52,4 +52,7 @@ export default defineConfig({
       }
     }),
   ],
+  server: {
+    allowedHosts: ['lucidledger.co', 'www.lucidledger.co']
+  },
 });
