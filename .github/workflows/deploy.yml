@@ -35,25 +35,22 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
-          envs: CLIENT_ENV,SERVER_ENV
           script: |
             set -euo pipefail
             cd ${{ secrets.EC2_PATH }}
             if command -v docker-compose >/dev/null 2>&1; then DC="docker-compose"; else DC="docker compose"; fi
             mkdir -p client server
-            # Ensure env files exist (empty if no secrets provided)
-            : > server/.env
-            : > client/.env
-            # Populate env files from GitHub Secrets if present
-            if [ -n "${SERVER_ENV:-}" ]; then printf '%s' "$SERVER_ENV" > server/.env; fi
-            if [ -n "${CLIENT_ENV:-}" ]; then printf '%s' "$CLIENT_ENV" > client/.env; fi
+            # Verify env files exist and show brief stats
+            echo "Env verification:"
+            ls -la client server
+            if [ -f server/.env ]; then echo "server/.env lines: $(wc -l < server/.env || echo 0)"; else echo "server/.env missing"; fi
+            if [ -f client/.env ]; then echo "client/.env lines: $(wc -l < client/.env || echo 0)"; else echo "client/.env missing"; fi
+            # Fail if env files are required by compose but missing
+            test -f server/.env || { echo "server/.env is required. Create it on EC2."; exit 1; }
+            test -f client/.env || { echo "client/.env is required. Create it on EC2."; exit 1; }
             $DC down
             $DC build --pull
             $DC up -d
             $DC ps
-
-        env:
-          CLIENT_ENV: ${{ secrets.CLIENT_ENV }}
-          SERVER_ENV: ${{ secrets.SERVER_ENV }}
 
 
