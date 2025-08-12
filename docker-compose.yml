@@ -21,6 +21,7 @@ services:
       - ./server/.env
     depends_on:
       - postgres
+    restart: unless-stopped
 
   frontend:
     build: ./client
