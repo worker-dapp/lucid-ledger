@@ -25,12 +25,14 @@ jobs:
           SOURCE: .
           TARGET: ${{ secrets.EC2_PATH }}
           ARGS: >
-            -avz --delete
+            -avz --delete --omit-dir-times --no-perms
             --exclude='.git/'
             --exclude='node_modules/'
             --exclude='.github/'
             --exclude='client/.env'
             --exclude='server/.env'
+            --exclude='letsencrypt' --exclude='letsencrypt/**'
+            --exclude='certbot-www' --exclude='certbot-www/**'
 
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.0.3
