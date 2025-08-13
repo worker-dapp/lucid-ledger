@@ -30,7 +30,7 @@ services:
     build: ./client
     container_name: client
     expose:
-      - "80"
+      - "5137"
     env_file:
       - ./client/.env
     depends_on:
