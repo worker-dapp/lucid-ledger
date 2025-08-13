@@ -31,6 +31,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Allow precaching of larger bundles produced by the build
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6 MiB
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {
@@ -52,6 +54,22 @@ export default defineConfig({
       }
     }),
   ],
+  build: {
+    // Increase the warning threshold for chunk sizes (in kB)
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        // Split vendor libraries to keep the main chunk smaller
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'react-vendor'
+            if (id.includes('date-fns')) return 'date-fns'
+            return 'vendor'
+          }
+        },
+      },
+    },
+  },
   server: {
     allowedHosts: ['lucidledger.co', 'www.lucidledger.co']
   },

@@ -1,21 +1,25 @@
-# Dockerfile for React client
+############################
+# Build stage
+############################
+FROM node:18-alpine AS builder
 
-# Build react client
-FROM node:18-alpine
-
-# Working directory be app
 WORKDIR /app
 
 COPY package*.json ./
+# Prefer reproducible install; gracefully fall back if peer deps or lock mismatches occur
+RUN npm ci --silent --no-audit --no-fund || npm install --silent --no-audit --no-fund --legacy-peer-deps
 
-### Installing dependencies
-
-RUN npm install --silent
-
-# Copy local files to app folder
 COPY . .
+RUN npm run build
 
-EXPOSE 5173
+############################
+# Runtime stage (Nginx static server)
+############################
+FROM nginx:alpine
 
-# Start the development server with host binding
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Nginx listens on 80 by default
+EXPOSE 80
+
+# Use default nginx startup
