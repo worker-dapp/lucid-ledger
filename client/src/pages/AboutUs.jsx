@@ -7,6 +7,7 @@ const AboutUs = () => {
     <div className="overflow-y-hidden">
       <Navbar />
       <Banner />
+      Hi
     </div>
   );
 };
