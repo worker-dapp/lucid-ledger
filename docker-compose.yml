@@ -18,8 +18,8 @@ services:
   backend:
     build: ./server
     container_name: server
-    expose:
-      - "5001"
+    ports:
+      - "5001:5001"
     env_file:
       - ./server/.env
     depends_on:
@@ -29,8 +29,8 @@ services:
   frontend:
     build: ./client
     container_name: client
-    expose:
-      - "5137"
+    ports:
+      - "5173:5173"
     env_file:
       - ./client/.env
     depends_on:
