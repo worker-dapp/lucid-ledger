@@ -19,6 +19,9 @@ FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Use custom Nginx config for SPA routing and caching
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Nginx listens on 80 by default
 EXPOSE 80
 
