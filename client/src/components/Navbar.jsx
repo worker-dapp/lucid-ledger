@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../api/AuthContext";
+import { DynamicWidget } from "@dynamic-labs/sdk-react-core";
 import logo from "../assets/Android.png";
 
 const Navbar = () => {
@@ -99,10 +100,15 @@ const Navbar = () => {
                 isActive ? "text-[#EE964B] font-semibold" : "text-white"
               } hover:text-[#F4D35E]`
             }
+            onClick={handleNavClick}
           >
             About Us
           </NavLink>
-
+          
+          {/* Dynamic Wallet Widget */}
+          <DynamicWidget />
+          
+          {/* User Menu */}
           {user ? (
             <div className='flex items-center gap-12'>
               <span className="text-white text-sm">

@@ -1,0 +1,114 @@
+name: Build and push Docker images
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  REGISTRY_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+      server: ${{ steps.filter.outputs.server }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            client:
+              - 'client/**'
+            server:
+              - 'server/**'
+
+  build:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push client
+        if: needs.changes.outputs.client == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/lucid-ledger-client:latest
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/lucid-ledger-client:${{ github.sha }}
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,mode=max,scope=client
+
+      - name: Build and push server
+        if: needs.changes.outputs.server == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/lucid-ledger-server:latest
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/lucid-ledger-server:${{ github.sha }}
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != ''
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH (pull images and restart without build)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT != '' && secrets.DEPLOY_PORT || '22' }}
+          script_stop: true
+          envs: REGISTRY,REGISTRY_OWNER,GITHUB_SHA,GHCR_TOKEN,DEPLOY_PATH
+          envs_format: export
+          script: |
+            set -euo pipefail
+            cd "${DEPLOY_PATH:-$HOME/lucid-ledger}"
+
+            # Ensure env files exist
+            test -f server/.env || { echo "server/.env missing"; exit 1; }
+            test -f client/.env || { echo "client/.env missing"; exit 1; }
+
+            # Optional registry login for private GHCR images
+            if [ -n "${GHCR_TOKEN:-}" ]; then
+              echo "$GHCR_TOKEN" | docker login ${REGISTRY:-ghcr.io} -u "${REGISTRY_OWNER}" --password-stdin
+            fi
+
+            # Pull and update services without building on host
+            export REGISTRY_OWNER="${REGISTRY_OWNER:-${GITHUB_REPOSITORY_OWNER}}"
+            export TAG="${GITHUB_SHA}"
+
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --no-build backend
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --no-build frontend
+            docker compose ps
+
