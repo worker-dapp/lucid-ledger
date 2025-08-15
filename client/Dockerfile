@@ -1,28 +1,33 @@
 ############################
 # Build stage
 ############################
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
-# Prefer reproducible install; gracefully fall back if peer deps or lock mismatches occur
-RUN npm ci --silent --no-audit --no-fund || npm install --silent --no-audit --no-fund --legacy-peer-deps
+RUN --mount=type=cache,target=/root/.npm apk add --no-cache libc6-compat \
+  && npm ci --no-audit --no-fund \
+  || npm install --no-audit --no-fund --legacy-peer-deps
 
 COPY . .
 RUN npm run build
 
 ############################
-# Runtime stage (Nginx static server)
+# Runtime stage (Node.js server)
 ############################
-FROM nginx:alpine
+FROM node:20-alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Use custom Nginx config for SPA routing and caching
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install serve package for static file serving
+RUN npm install -g serve
 
-# Nginx listens on 80 by default
-EXPOSE 80
+# Copy built files
+COPY --from=build /app/dist ./dist
 
-# Use default nginx startup
+# Expose port 3000
+EXPOSE 3000
+
+# Start the static file server
+CMD ["serve", "-s", "dist", "-l", "3000"]

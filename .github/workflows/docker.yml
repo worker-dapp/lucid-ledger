@@ -107,8 +107,19 @@ jobs:
             export REGISTRY_OWNER="${REGISTRY_OWNER:-${GITHUB_REPOSITORY_OWNER}}"
             export TAG="${GITHUB_SHA}"
 
+            # Pull latest images
             docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+
+            # Restart services with new images
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --no-build backend
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --no-build frontend
+
+            # Show running services
             docker compose ps
+
+            # Show service logs for verification
+            echo "=== Service Status ==="
+            docker compose ps
+            echo "=== Recent Logs ==="
+            docker compose logs --tail=20
 

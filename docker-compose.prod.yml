@@ -1,0 +1,11 @@
+services:
+  backend:
+    image: ghcr.io/${REGISTRY_OWNER:-OWNER}/lucid-ledger-server:${TAG:-latest}
+    build: null
+    ports:
+      - "5001:5001"
+  frontend:
+    image: ghcr.io/${REGISTRY_OWNER:-OWNER}/lucid-ledger-client:${TAG:-latest}
+    build: null
+    ports:
+      - "5173:5173"
